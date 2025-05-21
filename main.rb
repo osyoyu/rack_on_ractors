@@ -3,6 +3,8 @@
 require 'rack'
 require 'socket'
 
+require_relative './http_parser'
+
 class Server
   include Socket::Constants
 
@@ -29,7 +31,7 @@ class Server
       raise if !Ractor.shareable?(@app)
       Ractor.new(@app) do |app|
         conn = Ractor.receive
-        request = Request.from_connection(conn)
+        request = HttpParser.parse_request(conn)
         env = request.to_env
 
         begin
@@ -59,41 +61,6 @@ class Server
     end
   ensure
     socket.close if defined?(socket)
-  end
-
-  class Request
-    class << self
-      def from_connection(conn)
-        request_line = conn.gets("\r\n")
-        parsed_request_line = parse_request_line(request_line)
-        new(parsed_request_line[:method], parsed_request_line[:request_target], parsed_request_line[:http_version])
-      end
-
-      private def parse_request_line(request_line)
-        method, request_target, http_version = request_line.split(" ")
-        { method:, request_target:, http_version: }
-      end
-    end
-
-    def initialize(method, request_target, http_version)
-      @method = method
-      @request_target = request_target
-      @http_version = http_version
-    end
-
-    def to_env
-      {
-        "REQUEST_METHOD" => @method.upcase,
-        "SERVER_NAME" => "example.org",
-        "SERVER_PORT" => "80",
-        "SERVER_PROTOCOL" => @http_version,
-        "QUERY_STRING" => "",
-        "PATH_INFO" => @request_target,
-        "rack.url_scheme" => "http",
-        "HTTPS" => "off",
-        "SCRIPT_NAME" => "",
-      }
-    end
   end
 end
 
