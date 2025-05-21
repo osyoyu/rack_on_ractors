@@ -1,0 +1,34 @@
+GIT
+  remote: https://github.com/trilogy-libraries/trilogy.git
+  revision: 2d8887dd2c60ec9caf2d37e367e39cd211d9585b
+  ref: 2d8887dd2c60ec9caf2d37e367e39cd211d9585b
+  glob: contrib/ruby/*.gemspec
+  specs:
+    trilogy (2.9.0)
+      bigdecimal
+
+PATH
+  remote: ..
+  specs:
+    rack_on_ractors (0.1.0)
+      rack
+
+GEM
+  remote: https://rubygems.org/
+  specs:
+    bigdecimal (3.1.9)
+    erubi (1.13.1)
+    rack (3.1.15)
+
+PLATFORMS
+  arm64-darwin-24
+  ruby
+
+DEPENDENCIES
+  bigdecimal
+  erubi
+  rack_on_ractors!
+  trilogy!
+
+BUNDLED WITH
+   2.7.0.dev

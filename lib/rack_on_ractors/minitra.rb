@@ -23,40 +23,37 @@ def path_to_method_name(path)
   path.gsub('/', '__')
 end
 
-class Base
-  class << self
-    def get(path, &block)
-      define_handler('get', path, &block)
-    end
+module RackOnRactors
+  module Minitra
+    class Base
+      class << self
+        def get(path, &block)
+          define_handler('get', path, &block)
+        end
 
-    def post(path, &block)
-      define_handler('post', path, &block)
-    end
+        def post(path, &block)
+          define_handler('post', path, &block)
+        end
 
-    private def define_handler(method, path, &block)
-      # It's illegal to carry Procs across Ractors, so we resort to
-      # stringifying Procs here
-      self.class_eval(<<~__RUBY__)
+        private def define_handler(method, path, &block)
+          # It's illegal to carry Procs across Ractors, so we resort to
+          # stringifying Procs here
+          self.class_eval(<<~__RUBY__)
         def #{method}__#{path_to_method_name(path)}
           #{proc2src(block)}
         end
-      __RUBY__
+          __RUBY__
+        end
+      end
+
+      def call(env)
+        method = env['REQUEST_METHOD'].downcase
+        path = env['PATH_INFO']
+
+        res = self.send("#{method}__#{path_to_method_name(path)}")
+
+        [200, {}, [res]]
+      end
     end
-
-  end
-
-  def call(env)
-    method = env['REQUEST_METHOD'].downcase
-    path = env['PATH_INFO']
-
-    res = self.send("#{method}__#{path_to_method_name(path)}")
-
-    [200, {}, [res]]
-  end
-end
-
-class App < Base
-  get "/" do
-    "hello world\n"
   end
 end

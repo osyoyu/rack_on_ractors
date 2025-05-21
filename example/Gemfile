@@ -1,0 +1,7 @@
+source 'https://rubygems.org'
+
+gem 'rack_on_ractors', path: '..'
+
+gem 'bigdecimal'
+gem 'erubi'
+gem 'trilogy', git: 'https://github.com/trilogy-libraries/trilogy.git', ref: '2d8887dd2c60ec9caf2d37e367e39cd211d9585b', glob: 'contrib/ruby/*.gemspec'
