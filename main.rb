@@ -16,6 +16,7 @@ class Server
 
   def start
     socket = Socket.new(AF_INET, SOCK_STREAM, 0)
+    socket.setsockopt(SOL_SOCKET, SO_REUSEADDR, true)
     sockaddr = Socket.pack_sockaddr_in(@port, @bind_address)
     socket.bind(sockaddr)
     socket.listen(10) # backlog
