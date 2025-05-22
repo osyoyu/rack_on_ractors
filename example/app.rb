@@ -22,4 +22,11 @@ class App < RackOnRactors::Minitra::Base
     erb = ERB.new(File.read("./index.html.erb"), trim_mode: '-')
     erb.result(b)
   end
+
+  post "/3" do |headers, body|
+    p headers
+    p body
+    body.read # echo
+
+  end
 end

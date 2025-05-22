@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require 'stringio'
+
 module RackOnRactors
   module HttpParser
     class << self
@@ -8,12 +10,11 @@ module RackOnRactors
         method, request_target, version = request_line.split(' ', 3)
 
         headers = {}
-        while line = io.gets("\r\n")
-          line = line.chomp
+        while line = io.gets("\r\n").chomp
           break if line.empty?
 
           header_name, header_value = line.split(':', 2)
-          headers[header_name] = header_value.split
+          headers[header_name] = header_value.strip
         end
 
         body =
@@ -32,8 +33,8 @@ module RackOnRactors
         @method = method
         @request_target = request_target
         @http_version = http_version
-        @headers = {}
-        @body = nil
+        @headers = headers
+        @body = body
       end
 
       # Aims to implement the Rack spec.
@@ -61,6 +62,12 @@ module RackOnRactors
             env["HTTP_#{rack_name}"] = value
           end
         end
+
+        env['rack.url_scheme'] = 'http'
+        env['rack.input'] = StringIO.new(@body)
+        env['rack.errors'] = StringIO.new("")
+        env['rack.hijack?'] = false
+        env['rack.protocol'] = []
 
         env
       end

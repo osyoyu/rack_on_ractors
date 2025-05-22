@@ -39,8 +39,8 @@ module RackOnRactors
           # It's illegal to carry Procs across Ractors, so we resort to
           # stringifying Procs here
           self.class_eval(<<~__RUBY__)
-        def #{method}__#{path_to_method_name(path)}
-          #{proc2src(block)}
+        def #{method}__#{path_to_method_name(path)}(headers, body)
+          proc { #{proc2src(block)} }.call(headers, body)
         end
           __RUBY__
         end
@@ -50,7 +50,15 @@ module RackOnRactors
         method = env['REQUEST_METHOD'].downcase
         path = env['PATH_INFO']
 
-        res = self.send("#{method}__#{path_to_method_name(path)}")
+        headers = {}
+        env.each do |key, value|
+          next if !(key == 'CONTENT_TYPE' || key == 'CONTENT_LENGTH' || key.start_with?('HTTP_'))
+          headers[key.delete_prefix('HTTP_').downcase.gsub('_', '-')] = value
+        end
+
+        body = env['rack.input']
+
+        res = self.send("#{method}__#{path_to_method_name(path)}", headers, body)
 
         [200, {}, [res]]
       end
