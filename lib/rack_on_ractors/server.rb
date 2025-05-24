@@ -56,11 +56,18 @@ module RackOnRactors
       505 => "HTTP Version Not Supported",
     }.freeze
 
-    def initialize(bind_address = "127.0.0.1", port = 8080)
+    def initialize(bind_address = "127.0.0.1", port = 8080, call_make_shareable: false)
       @bind_address = bind_address
       @port = port
 
       @app = Rack::Builder.parse_file("./config.ru")
+
+      # When app_make_shareable: true, app will be deep frozen in attempt to
+      # make it Ractor shareable.
+      # This comes useful when multiple middleware are configured
+      # (Rack::Builder will not freeze middlewares on its own).
+      # Note: the app may not be made shareable, even if this option is specified.
+      Ractor.make_shareable(@app) if call_make_shareable
       raise "app is not shareable" if !Ractor.shareable?(@app)
     end
 
@@ -76,7 +83,6 @@ module RackOnRactors
         connn, _ = socket.accept # choose awkward name to avoid shadowing
 
         # Make sure @app does not get copied on Ractor.new
-        raise if !Ractor.shareable?(@app)
         Ractor.new(@app) do |app|
           conn = Ractor.receive
           request = HttpParser.parse_request(conn)
