@@ -1,0 +1,21 @@
+PATH
+  remote: ../..
+  specs:
+    rack_on_ractors (0.1.0)
+      rack
+
+GEM
+  remote: https://rubygems.org/
+  specs:
+    rack (3.1.15)
+
+PLATFORMS
+  arm64-darwin-24
+  ruby
+
+DEPENDENCIES
+  rack
+  rack_on_ractors!
+
+BUNDLED WITH
+   2.7.0.dev
