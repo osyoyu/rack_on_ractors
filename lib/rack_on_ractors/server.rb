@@ -76,7 +76,7 @@ module RackOnRactors
       socket.setsockopt(SOL_SOCKET, SO_REUSEADDR, true)
       sockaddr = Socket.pack_sockaddr_in(@port, @bind_address)
       socket.bind(sockaddr)
-      socket.listen(10) # backlog
+      socket.listen(64) # backlog
       puts "Listening on #{@bind_address}:#{@port}"
 
       loop do
