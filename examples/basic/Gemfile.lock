@@ -8,7 +8,7 @@ GIT
       bigdecimal
 
 PATH
-  remote: ..
+  remote: ../..
   specs:
     rack_on_ractors (0.1.0)
       rack

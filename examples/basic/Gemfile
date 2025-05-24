@@ -1,6 +1,6 @@
 source 'https://rubygems.org'
 
-gem 'rack_on_ractors', path: '..'
+gem 'rack_on_ractors', path: '../..'
 
 gem 'bigdecimal'
 gem 'erubi'
