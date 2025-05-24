@@ -46,10 +46,12 @@ module RackOnRactors
         private def define_handler(method, path, &block)
           # It's illegal to carry Procs across Ractors, so we resort to
           # stringifying Procs here
+          #
+          # Could be resolved in https://bugs.ruby-lang.org/issues/17159 .
           self.class_eval(<<~__RUBY__)
-        def #{method}__#{path_to_method_name(path)}(headers, body)
-          proc { #{proc2src(block)} }.call(headers, body)
-        end
+            def #{method}__#{path_to_method_name(path)}(headers, body)
+              proc { #{proc2src(block)} }.call(headers, body)
+            end
           __RUBY__
         end
       end
