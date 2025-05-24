@@ -96,15 +96,24 @@ module RackOnRactors
           status_code = res[0]
           reason_phrase = RFC9110_REASON_PHRASES[status_code] || "Unknown"
 
-          body = res[2][0]
+          body = res[2]
+          body_str = String.new
+          if body.respond_to?(:each)
+            body.each { body_str << it }
+          else
+            body_str << "(internal error)"
+          end
+          if body.respond_to?(:close)
+            body.close
+          end
           conn.puts "HTTP/1.1 #{status_code} #{reason_phrase}\r\n"
-          conn.puts "Content-Length: #{body.bytesize}\r\n"
+          conn.puts "Content-Length: #{body_str.bytesize}\r\n"
           conn.puts "Connection: Close\r\n"
           res[1].each do |header_name, header_body|
             conn.puts "#{header_name}: #{header_body}"
           end
           conn.puts "\r\n"
-          conn.puts body
+          conn.puts body_str
           conn.close
 
           nil # reduce implicit copy on #take
