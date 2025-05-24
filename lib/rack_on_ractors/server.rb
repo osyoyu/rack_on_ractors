@@ -102,25 +102,43 @@ module RackOnRactors
           status_code = res[0]
           reason_phrase = RFC9110_REASON_PHRASES[status_code] || "Unknown"
 
-          body = res[2]
-          body_str = String.new
-          if body.respond_to?(:each)
-            body.each { body_str << it }
-          else
-            body_str << "(internal error)"
+          conn.write "HTTP/1.1 #{status_code} #{reason_phrase}\r\n"
+
+          # Send headers
+          headers = res[1]
+          headers.each do |header_name, header_body|
+            conn.write "#{header_name}: #{header_body}\r\n"
           end
+
+          chunked = headers["Transfer-Encoding"] == "chunked" # ?
+
+          # Send body
+          body = res[2]
+          if !chunked
+            body_str = String.new
+            body.each { body_str << it }
+
+            conn.write "Content-Length: #{body_str.bytesize}\r\n"
+            conn.write "Connection: Close\r\n" # no keepalive impl (yet)
+            conn.write "\r\n"
+
+            conn.write body_str
+          else
+            conn.write "\r\n"
+
+            body.each do |chunk|
+              conn.write chunk.bytesize.to_s(16) + "\r\n"
+              conn.write chunk
+              conn.write "\r\n"
+            end
+
+            conn.write "0" + "\r\n\r\n"
+          end
+
+          conn.close
           if body.respond_to?(:close)
             body.close
           end
-          conn.puts "HTTP/1.1 #{status_code} #{reason_phrase}\r\n"
-          conn.puts "Content-Length: #{body_str.bytesize}\r\n"
-          conn.puts "Connection: Close\r\n"
-          res[1].each do |header_name, header_body|
-            conn.puts "#{header_name}: #{header_body}"
-          end
-          conn.puts "\r\n"
-          conn.puts body_str
-          conn.close
 
           nil # reduce implicit copy on #take
         end.send(connn, move: true)

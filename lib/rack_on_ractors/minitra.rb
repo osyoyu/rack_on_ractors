@@ -60,17 +60,47 @@ module RackOnRactors
         method = env['REQUEST_METHOD'].downcase
         path = env['PATH_INFO']
 
-        headers = {}
+        request_headers = {}
         env.each do |key, value|
           next if !(key == 'CONTENT_TYPE' || key == 'CONTENT_LENGTH' || key.start_with?('HTTP_'))
-          headers[key.delete_prefix('HTTP_').downcase.gsub('_', '-')] = value
+          request_headers[key.delete_prefix('HTTP_').downcase.gsub('_', '-')] = value
         end
 
-        body = env['rack.input']
+        request_body = env['rack.input']
 
-        res = self.send("#{method}__#{path_to_method_name(path)}", headers, body)
+        res = self.send("#{method}__#{path_to_method_name(path)}", request_headers, request_body)
 
-        [200, {}, [res]]
+        response_headers = {}
+        if res.is_a?(Stream)
+          response_headers['Transfer-Encoding'] = 'chunked'
+          response_headers['Content-Type'] = 'text/event-stream'
+          response_body = res
+        else
+          response_body = [res]
+        end
+
+        [200, response_headers, response_body]
+      end
+
+      def stream(&block)
+        Stream.new(&block)
+      end
+    end
+
+    class Stream
+      def initialize(&producer_block)
+        @producer_block = producer_block
+        @consumer_block = nil
+      end
+
+      def each(&consumer_block)
+        @consumer_block = consumer_block
+        @producer_block.call(self)
+      end
+
+      def write(data)
+        @consumer_block.call(data.to_s)
+        data.to_s.bytesize
       end
     end
   end
