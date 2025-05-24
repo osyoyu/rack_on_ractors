@@ -35,6 +35,14 @@ module RackOnRactors
           define_handler('post', path, &block)
         end
 
+        def put(path, &block)
+          define_handler('put', path, &block)
+        end
+
+        def delete(path, &block)
+          define_handler('delete', path, &block)
+        end
+
         private def define_handler(method, path, &block)
           # It's illegal to carry Procs across Ractors, so we resort to
           # stringifying Procs here
